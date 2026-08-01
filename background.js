@@ -1,0 +1,19 @@
+// background.js - Service worker to execute downloads via chrome.downloads API
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'DOWNLOAD_VIDEO' && message.url) {
+    chrome.downloads.download({
+      url: message.url,
+      filename: message.filename || 'Zoom_Recording.mp4',
+      saveAs: true
+    }, (downloadId) => {
+      if (chrome.runtime.lastError) {
+        console.error('Zoom Recording Downloader error:', chrome.runtime.lastError);
+      } else {
+        console.log('Download started successfully. ID:', downloadId);
+      }
+    });
+    sendResponse({ success: true });
+  }
+  return true;
+});
