@@ -1,3 +1,7 @@
+# Credits
+
+Vibe code thanks to Claude Code
+
 # Zoom Download Extension (Chrome Extension MV3)
 
 A lightweight Manifest V3 Chrome Extension that enables downloading Zoom recordings directly from authenticated share and play pages (`https://*.zoom.us/rec/share/*` and `https://*.zoom.us/rec/play/*`).
