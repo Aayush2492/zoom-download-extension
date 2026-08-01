@@ -64,6 +64,14 @@ function initButton() {
       const safeTitle = info.topic.replace(/[^a-zA-Z0-9_\-]/g, '_');
 
       try {
+        // Ensure background rules use this exact origin for Access-Control-Allow-Origin
+        await new Promise((resolve) => {
+          chrome.runtime.sendMessage({
+            action: 'SETUP_CORS_ORIGIN',
+            origin: window.location.origin
+          }, () => resolve());
+        });
+
         const response = await fetch(info.mp4Url, {
           method: 'GET',
           credentials: 'include'
