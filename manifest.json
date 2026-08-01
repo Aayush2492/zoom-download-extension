@@ -6,7 +6,8 @@
   "permissions": [
     "downloads",
     "activeTab",
-    "scripting"
+    "scripting",
+    "declarativeNetRequest"
   ],
   "host_permissions": [
     "*://*.zoom.us/*",
@@ -21,7 +22,9 @@
         "*://*.zoom.us/rec/play/*",
         "*://*.zoom.us/rec/share/*"
       ],
-      "js": ["content.js"],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_idle"
     }
   ]
