@@ -1,6 +1,6 @@
 # Credits
 
-Vibe code thanks to Claude Code
+Vibe coded thanks to Claude Code
 
 # Zoom Download Extension (Chrome Extension MV3)
 
