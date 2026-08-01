@@ -1,4 +1,4 @@
-// content.js - Injects download UI button and fetches direct MP4 stream URL from Zoom NWS API
+// content.js - Injects download UI button and streams MP4 file directly from Zoom using authenticated page session
 
 async function getRecordingInfo() {
   try {
@@ -25,9 +25,7 @@ async function getRecordingInfo() {
     const resp = await fetch(`/nws/recording/1.0/play/info/${playId}`, {
       method: 'GET',
       credentials: 'include',
-      headers: {
-        'Accept': 'application/json'
-      }
+      headers: { 'Accept': 'application/json' }
     });
 
     const data = await resp.json();
@@ -60,44 +58,62 @@ function initButton() {
     btn.innerText = '⏳ Resolving video URL...';
     btn.disabled = true;
     const info = await getRecordingInfo();
+
     if (info && info.mp4Url) {
-      btn.innerText = '⬇ Downloading...';
+      btn.innerText = '⬇ Downloading video (0%)...';
       const safeTitle = info.topic.replace(/[^a-zA-Z0-9_\-]/g, '_');
-      
+
       try {
-        chrome.runtime.sendMessage({
-          action: 'DOWNLOAD_VIDEO',
-          url: info.mp4Url,
-          filename: `${safeTitle}.mp4`,
-          referer: window.location.origin + '/'
-        }, (response) => {
-          if (chrome.runtime.lastError) {
-            const msg = chrome.runtime.lastError.message || '';
-            console.error('SendMessage error:', msg);
-            if (msg.includes('invalidated')) {
-              btn.innerText = '⚠️ Please refresh this page (F5)';
-            } else {
-              btn.innerText = '❌ Download failed';
-            }
-          } else {
-            btn.innerText = '✅ Download Started!';
-          }
-          setTimeout(() => {
-            btn.innerText = '⬇ Download Recording';
-            btn.disabled = false;
-          }, 4000);
+        const response = await fetch(info.mp4Url, {
+          method: 'GET',
+          credentials: 'include'
         });
-      } catch (err) {
-        if (err.message && err.message.includes('invalidated')) {
-          btn.innerText = '⚠️ Extension updated! Refresh page (F5)';
-        } else {
-          btn.innerText = '❌ Error';
+
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
         }
-        setTimeout(() => {
-          btn.innerText = '⬇ Download Recording';
-          btn.disabled = false;
-        }, 4000);
+
+        const reader = response.body.getReader();
+        const contentLength = +response.headers.get('Content-Length') || 0;
+        let receivedLength = 0;
+        const chunks = [];
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          receivedLength += value.length;
+          if (contentLength > 0) {
+            const pct = Math.round((receivedLength / contentLength) * 100);
+            btn.innerText = `⬇ Downloading video (${pct}%)...`;
+          } else {
+            const mb = (receivedLength / (1024 * 1024)).toFixed(1);
+            btn.innerText = `⬇ Downloading (${mb} MB)...`;
+          }
+        }
+
+        btn.innerText = '⏳ Saving MP4 file...';
+        const blob = new Blob(chunks, { type: 'video/mp4' });
+        const blobUrl = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = `${safeTitle}.mp4`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+
+        btn.innerText = '✅ Saved to Downloads!';
+      } catch (err) {
+        console.error('Download stream error:', err);
+        btn.innerText = '❌ Download failed (See Console)';
       }
+
+      setTimeout(() => {
+        btn.innerText = '⬇ Download Recording';
+        btn.disabled = false;
+      }, 4000);
     } else {
       btn.innerText = '❌ Stream not found (Authenticating needed?)';
       setTimeout(() => {
