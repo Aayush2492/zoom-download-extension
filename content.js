@@ -2,10 +2,8 @@
 
 async function getRecordingInfo() {
   try {
-    // Check if we are on a play page or extract playId from URL / window state
     let playId = window.location.pathname.split('/rec/play/')[1]?.split('?')[0];
 
-    // If on a share page, check if window.__data__ or share-info has redirected playId
     if (!playId && window.__data__ && window.__data__.meetingId) {
       const shareResp = await fetch(`/nws/recording/1.0/play/share-info/${window.__data__.meetingId}`, {
         method: 'GET',
@@ -20,7 +18,7 @@ async function getRecordingInfo() {
     }
 
     if (!playId) {
-      console.warn('Zoom Recording Downloader: Could not resolve playId from current page.');
+      console.warn('Zoom Download Extension: Could not resolve playId from current page.');
       return null;
     }
 
@@ -42,7 +40,7 @@ async function getRecordingInfo() {
       return { mp4Url, topic, duration };
     }
   } catch (err) {
-    console.error('Zoom Recording Downloader error:', err);
+    console.error('Zoom Download Extension error:', err);
   }
   return null;
 }
@@ -65,17 +63,41 @@ function initButton() {
     if (info && info.mp4Url) {
       btn.innerText = '⬇ Downloading...';
       const safeTitle = info.topic.replace(/[^a-zA-Z0-9_\-]/g, '_');
-      chrome.runtime.sendMessage({
-        action: 'DOWNLOAD_VIDEO',
-        url: info.mp4Url,
-        filename: `${safeTitle}.mp4`,
-        referer: window.location.origin + '/'
-      }, () => {
+      
+      try {
+        chrome.runtime.sendMessage({
+          action: 'DOWNLOAD_VIDEO',
+          url: info.mp4Url,
+          filename: `${safeTitle}.mp4`,
+          referer: window.location.origin + '/'
+        }, (response) => {
+          if (chrome.runtime.lastError) {
+            const msg = chrome.runtime.lastError.message || '';
+            console.error('SendMessage error:', msg);
+            if (msg.includes('invalidated')) {
+              btn.innerText = '⚠️ Please refresh this page (F5)';
+            } else {
+              btn.innerText = '❌ Download failed';
+            }
+          } else {
+            btn.innerText = '✅ Download Started!';
+          }
+          setTimeout(() => {
+            btn.innerText = '⬇ Download Recording';
+            btn.disabled = false;
+          }, 4000);
+        });
+      } catch (err) {
+        if (err.message && err.message.includes('invalidated')) {
+          btn.innerText = '⚠️ Extension updated! Refresh page (F5)';
+        } else {
+          btn.innerText = '❌ Error';
+        }
         setTimeout(() => {
           btn.innerText = '⬇ Download Recording';
           btn.disabled = false;
-        }, 3000);
-      });
+        }, 4000);
+      }
     } else {
       btn.innerText = '❌ Stream not found (Authenticating needed?)';
       setTimeout(() => {
@@ -88,7 +110,6 @@ function initButton() {
   document.body.appendChild(btn);
 }
 
-// Ensure DOM is ready and inject button
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initButton);
 } else {
