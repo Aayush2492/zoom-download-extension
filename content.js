@@ -68,7 +68,8 @@ function initButton() {
       chrome.runtime.sendMessage({
         action: 'DOWNLOAD_VIDEO',
         url: info.mp4Url,
-        filename: `${safeTitle}.mp4`
+        filename: `${safeTitle}.mp4`,
+        referer: window.location.origin + '/'
       }, () => {
         setTimeout(() => {
           btn.innerText = '⬇ Download Recording';
