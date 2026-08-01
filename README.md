@@ -1,4 +1,4 @@
-# Zoom Recording Downloader (Chrome Extension MV3)
+# Zoom Download Extension (Chrome Extension MV3)
 
 A lightweight Manifest V3 Chrome Extension that enables downloading Zoom recordings directly from authenticated share and play pages (`https://*.zoom.us/rec/share/*` and `https://*.zoom.us/rec/play/*`).
 
@@ -14,11 +14,11 @@ By running inside the authenticated Chrome session, this extension:
 
 1. Clone or download this repository to your local machine:
    ```bash
-   git clone git@github.com:Aayush2492/zoom-recording-downloader.git
+   git clone git@github.com:Aayush2492/zoom-download-extension.git
    ```
 2. Open Google Chrome and navigate to `chrome://extensions/`.
 3. Enable **Developer mode** in the top-right corner.
-4. Click **Load unpacked** in the top-left corner and select this folder (`zoom-recording-downloader`).
+4. Click **Load unpacked** in the top-left corner and select this folder (`zoom-download-extension`).
 5. Open any authenticated Zoom recording link—a floating **"⬇ Download Recording"** button will appear in the bottom-right corner of the window.
 
 ## Usage

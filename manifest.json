@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Zoom Recording Downloader",
+  "name": "Zoom Download Extension",
   "version": "1.0.0",
   "description": "Download Zoom recordings directly from authenticated share and play pages.",
   "permissions": [
